@@ -1,279 +1,332 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Check, Lock, Shield, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, Check, Zap, Clock, Leaf, ChevronLeft, ChevronRight, Lock, Shield, RotateCcw } from 'lucide-react';
 import { products } from '../../data/products';
 import { ScrollReveal } from '../ui/ScrollReveal';
-import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
+
+const benefits = [
+  { icon: Zap, label: 'NO CRASH', sub: 'Sustained Energy' },
+  { icon: Clock, label: '4-6 HOURS', sub: 'Sustained Energy' },
+  { icon: Leaf, label: 'CLEAN LABEL', sub: '8 Ingredients' },
+];
 
 export const ProductShowcase = () => {
-  const [activeProduct, setActiveProduct] = useState(0);
-  const [selectedPack, setSelectedPack] = useState(products[0].packSizes[0]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedPack, setSelectedPack] = useState(0);
   const [isSubscribe, setIsSubscribe] = useState(true);
-  const [subscribeFrequency, setSubscribeFrequency] = useState('monthly');
+  const [deliveryFreq, setDeliveryFreq] = useState('monthly');
+  const [direction, setDirection] = useState(1); // 1 = right, -1 = left
 
-  const product = products[activeProduct];
-  const currentPrice = isSubscribe ? product.subscribePrice : selectedPack.price;
-  const originalPrice = isSubscribe ? product.oneTimePrice : null;
+  const product = products[activeIndex];
+  const pack = product.packSizes[selectedPack];
+  const oneTimePrice = product.oneTimePrice;
+  const savings = (oneTimePrice - product.subscribePrice).toFixed(2);
+  const isEven = activeIndex % 2 === 0;
 
-  const handleProductChange = (index) => {
-    setActiveProduct(index);
-    setSelectedPack(products[index].packSizes[0]);
+  const goTo = (index) => {
+    setDirection(index > activeIndex ? 1 : -1);
+    setActiveIndex(index);
+    setSelectedPack(0);
   };
 
-  const nextProduct = () => {
-    const next = (activeProduct + 1) % products.length;
-    handleProductChange(next);
+  const next = () => {
+    const idx = (activeIndex + 1) % products.length;
+    setDirection(1);
+    setActiveIndex(idx);
+    setSelectedPack(0);
   };
 
-  const prevProduct = () => {
-    const prev = (activeProduct - 1 + products.length) % products.length;
-    handleProductChange(prev);
+  const prev = () => {
+    const idx = (activeIndex - 1 + products.length) % products.length;
+    setDirection(-1);
+    setActiveIndex(idx);
+    setSelectedPack(0);
+  };
+
+  const slideVariants = {
+    enter: (dir) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir) => ({ x: dir > 0 ? -300 : 300, opacity: 0 }),
   };
 
   return (
     <section id="shop" className="relative min-h-screen bg-deep overflow-hidden">
-      {/* Dynamic Background that changes with product */}
+      {/* Dynamic Background Glow */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeProduct}
+          key={activeIndex + '-bg'}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
-          className="absolute inset-0"
+          transition={{ duration: 0.5 }}
+          className="absolute inset-0 pointer-events-none"
         >
-          <div 
-            className="absolute inset-0 opacity-10"
+          <div
+            className="absolute inset-0 opacity-[0.08]"
             style={{
-              background: `radial-gradient(ellipse at 30% 50%, ${product.color}80 0%, transparent 60%), 
-                           radial-gradient(ellipse at 70% 80%, ${product.color}40 0%, transparent 50%)`,
+              background: `radial-gradient(ellipse at 30% 50%, ${product.color} 0%, transparent 60%), 
+                           radial-gradient(ellipse at 80% 80%, ${product.color}60 0%, transparent 50%)`,
             }}
           />
         </motion.div>
       </AnimatePresence>
 
+      {/* Side Navigation Arrows */}
+      <button
+        onClick={prev}
+        className="hidden lg:flex absolute left-4 xl:left-8 top-1/2 -translate-y-1/2 z-30 w-14 h-14 rounded-full items-center justify-center text-white transition-all hover:scale-110 border"
+        style={{ borderColor: product.color + '50', backgroundColor: product.color + '15' }}
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+      <button
+        onClick={next}
+        className="hidden lg:flex absolute right-4 xl:right-8 top-1/2 -translate-y-1/2 z-30 w-14 h-14 rounded-full items-center justify-center text-white transition-all hover:scale-110 border"
+        style={{ borderColor: product.color + '50', backgroundColor: product.color + '15' }}
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+
       {/* Content */}
-      <div className="relative z-10 py-20 md:py-28">
-        {/* Section Header */}
-        <ScrollReveal className="text-center mb-16 px-4">
-          <span className="text-honey font-accent tracking-[0.3em] text-sm mb-4 block">
-            PRODUCTS
-          </span>
-          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-text-warm mb-4">
-            Choose Your Formula
-          </h2>
-          <p className="text-text-dim text-lg max-w-2xl mx-auto">
-            Every edition built on raw honey. No compromise.
-          </p>
+      <div className="relative z-10 py-16 md:py-24">
+        {/* CODE NECTAR Badge */}
+        <ScrollReveal className="flex justify-center mb-8">
+          <motion.span
+            key={activeIndex + '-badge'}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-block px-4 py-1.5 rounded-full text-xs font-accent tracking-[0.2em] border"
+            style={{ borderColor: product.color, color: product.color }}
+          >
+            CODE NECTAR
+          </motion.span>
         </ScrollReveal>
 
-        {/* Product Tabs */}
-        <ScrollReveal delay={0.1} className="mb-16 px-4">
-          <div className="flex flex-wrap justify-center gap-3">
-            {products.map((p, index) => (
-              <button
-                key={p.id}
-                onClick={() => handleProductChange(index)}
-                className={`px-6 py-3 rounded-full font-body text-sm font-medium transition-all duration-300 ${
-                  activeProduct === index
-                    ? 'text-deep shadow-lg'
-                    : 'bg-dark-card text-text-warm border border-honey/20 hover:border-honey/50'
-                }`}
-                style={activeProduct === index ? { backgroundColor: product.color } : {}}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
-        </ScrollReveal>
-
-        {/* Full-Width Product Display */}
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeProduct}
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.97 }}
-              transition={{ duration: 0.5 }}
-              className="relative rounded-3xl overflow-hidden border border-honey/10"
-              style={{
-                background: `linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 50%, #1a1a1a 100%)`,
-              }}
+        {/* Product Dots / Tabs */}
+        <div className="flex justify-center gap-3 mb-12 px-4">
+          {products.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() => goTo(i)}
+              className={`px-4 py-2 rounded-full text-xs font-accent tracking-wider transition-all duration-300 border ${
+                activeIndex === i
+                  ? 'text-white'
+                  : 'border-dark-card text-text-dim hover:text-text-warm'
+              }`}
+              style={activeIndex === i ? { backgroundColor: product.color, borderColor: product.color } : {}}
             >
-              {/* Color Accent Strip */}
-              <div 
-                className="h-1.5 w-full"
-                style={{ backgroundColor: product.color }}
-              />
+              {p.name}
+            </button>
+          ))}
+        </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
-                {/* Left: Product Image */}
-                <div className="relative flex items-center justify-center p-8 md:p-16 overflow-hidden">
+        {/* Main Product Area */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 xl:px-16">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={activeIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center`}>
+                {/* Image Side */}
+                <div className={`relative flex items-center justify-center py-8 ${!isEven ? 'lg:order-2' : 'lg:order-1'}`}>
                   {/* Background Glow */}
-                  <motion.div 
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 0.25 }}
-                    transition={{ duration: 0.8 }}
-                    className="absolute inset-0 blur-[80px]"
+                  <div
+                    className="absolute inset-0 opacity-15 blur-[100px] rounded-full"
                     style={{ backgroundColor: product.color }}
                   />
-
-                  {/* Navigation Arrows */}
-                  <button 
-                    onClick={prevProduct}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-deep/60 border border-honey/20 flex items-center justify-center text-text-warm hover:bg-honey/20 hover:border-honey transition-all"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={nextProduct}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-deep/60 border border-honey/20 flex items-center justify-center text-text-warm hover:bg-honey/20 hover:border-honey transition-all"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-
-                  {/* Product Image */}
                   {product.image && (
                     <motion.img
-                      key={product.image}
-                      initial={{ scale: 0.85, opacity: 0, rotateY: -10 }}
-                      animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                      exit={{ scale: 0.85, opacity: 0, rotateY: 10 }}
-                      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                       src={product.image}
                       alt={product.name}
-                      className="relative z-10 w-full max-w-md h-auto object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
+                      className="relative z-10 w-full max-w-lg h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                      initial={{ scale: 0.85, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.1 }}
                     />
                   )}
-
-                  {/* Decorative ring */}
-                  <div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border opacity-10"
-                    style={{ borderColor: product.color }}
-                  />
-                  <div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border opacity-5"
-                    style={{ borderColor: product.color }}
-                  />
                 </div>
 
-                {/* Right: Product Details */}
-                <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16">
-                  {/* Tag & Title */}
-                  <Badge 
-                    variant={product.tag === 'BESTSELLER' ? 'bestseller' : product.tag === 'NEW' ? 'new' : 'solid'} 
-                    size="sm" 
-                    className="mb-4 w-fit"
-                  >
-                    {product.tag}
-                  </Badge>
-
-                  <h3 className="font-display text-4xl md:text-5xl font-bold text-text-warm mb-2">
+                {/* Details Side */}
+                <div className={`${!isEven ? 'lg:order-1' : 'lg:order-2'}`}>
+                  {/* Title */}
+                  <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-text-warm mb-1 leading-tight">
                     {product.name}
-                  </h3>
-                  <p className="text-text-dim text-lg mb-2">{product.subtitle}</p>
-                  <p className="text-text-dim text-sm italic mb-6">{product.tagline}</p>
+                    {product.subtitle && (
+                      <span className="block text-2xl md:text-3xl font-normal text-text-dim mt-1">
+                        ({product.subtitle})
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-text-dim text-sm italic mb-4">{product.tagline}</p>
 
                   {/* Rating */}
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
                     <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-honey text-honey" />
+                      {[...Array(product.rating)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-honey text-honey" />
                       ))}
                     </div>
-                    <span className="text-sm text-text-dim">({product.reviewCount}+ reviews)</span>
+                    <span className="text-text-dim text-sm">{product.reviewCount}+ Reviews</span>
                   </div>
 
                   {/* Claims */}
-                  <ul className="space-y-3 mb-8">
+                  <div className="flex flex-wrap gap-x-5 gap-y-1 mb-8">
                     {product.claims.map((claim, i) => (
-                      <li key={i} className="flex items-center gap-3 text-text-warm">
-                        <Check className="w-5 h-5 text-honey flex-shrink-0" />
-                        <span className="text-base">{claim}</span>
-                      </li>
+                      <span key={i} className="flex items-center gap-1.5 text-sm text-text-warm">
+                        <Check className="w-4 h-4 flex-shrink-0" style={{ color: product.color }} />
+                        {claim}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
 
                   {/* Pack Size Selector */}
                   <div className="mb-6">
-                    <p className="text-sm text-text-dim mb-3 font-medium uppercase tracking-wider">Pack Size</p>
-                    <div className="flex flex-wrap gap-3">
-                      {product.packSizes.map((pack) => (
+                    <p className="text-xs font-accent tracking-[0.2em] text-text-dim mb-3 uppercase">Select Pack Size</p>
+                    <div className="flex gap-3">
+                      {product.packSizes.map((ps, i) => (
                         <button
-                          key={pack.qty}
-                          onClick={() => setSelectedPack(pack)}
-                          className={`px-6 py-3 rounded-xl text-sm font-medium transition-all ${
-                            selectedPack.qty === pack.qty && !isSubscribe
-                              ? 'bg-honey text-deep shadow-lg'
-                              : 'bg-deep text-text-warm border border-honey/20 hover:border-honey/50'
+                          key={ps.qty}
+                          onClick={() => setSelectedPack(i)}
+                          className={`flex-1 py-3 px-4 rounded-lg border-2 text-center transition-all duration-200 ${
+                            selectedPack === i
+                              ? 'text-white'
+                              : 'border-dark-card text-text-dim hover:border-text-dim'
                           }`}
+                          style={selectedPack === i ? { borderColor: product.color, backgroundColor: product.color + '20' } : {}}
                         >
-                          {pack.qty} Pack — ${pack.price}
+                          <span className="block text-lg font-bold">{ps.qty}</span>
+                          <span className="block text-xs mt-0.5">${ps.price.toFixed(2)}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Subscribe Toggle */}
-                  <div className="bg-deep/60 rounded-2xl p-5 mb-6 border border-honey/10">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-text-warm font-medium text-base">Subscribe & Save</span>
-                      <button
-                        onClick={() => setIsSubscribe(!isSubscribe)}
-                        className={`relative w-14 h-7 rounded-full transition-colors ${
-                          isSubscribe ? 'bg-honey' : 'bg-dark-card'
-                        }`}
+                  {/* Subscribe & Save Box */}
+                  <div
+                    className="rounded-xl p-5 mb-4 border-2 cursor-pointer transition-all"
+                    style={{ borderColor: isSubscribe ? product.color : '#2e2e2e', backgroundColor: isSubscribe ? product.color + '08' : 'transparent' }}
+                    onClick={() => setIsSubscribe(true)}
+                  >
+                    <div className="flex items-center gap-3 mb-1">
+                      <div
+                        className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                        style={{ borderColor: product.color }}
                       >
-                        <motion.div
-                          className="absolute top-1 w-5 h-5 rounded-full bg-white shadow-md"
-                          animate={{ left: isSubscribe ? '32px' : '4px' }}
-                          transition={{ duration: 0.2 }}
-                        />
-                      </button>
+                        {isSubscribe && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: product.color }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between flex-1">
+                        <span className="text-text-warm font-semibold text-base">Subscribe & Save</span>
+                        <div className="flex items-center gap-2">
+                          {isSubscribe && (
+                            <span className="text-text-dim line-through text-sm">${oneTimePrice}</span>
+                          )}
+                          <span className="text-xl font-bold" style={{ color: product.color }}>
+                            ${product.subscribePrice}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+
+                    <p className="text-text-dim text-xs ml-8 mb-4">Never run out of supplies. Cancel anytime.</p>
 
                     {isSubscribe && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-4"
                       >
-                        <select
-                          value={subscribeFrequency}
-                          onChange={(e) => setSubscribeFrequency(e.target.value)}
-                          className="w-full bg-dark-card border border-honey/20 rounded-xl px-4 py-3 text-sm text-text-warm focus:border-honey focus:outline-none"
-                        >
-                          <option value="2weeks">Every 2 Weeks</option>
-                          <option value="monthly">Every Month</option>
-                        </select>
+                        <p className="text-xs font-accent tracking-[0.15em] text-text-dim mb-2 uppercase">Deliver Every:</p>
+                        <div className="flex gap-2 mb-4">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeliveryFreq('2weeks'); }}
+                            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium border transition-all ${
+                              deliveryFreq === '2weeks'
+                                ? 'text-white border-transparent'
+                                : 'border-dark-card text-text-dim hover:border-text-dim'
+                            }`}
+                            style={deliveryFreq === '2weeks' ? { backgroundColor: product.color } : {}}
+                          >
+                            Every 2 Weeks
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeliveryFreq('monthly'); }}
+                            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium border transition-all ${
+                              deliveryFreq === 'monthly'
+                                ? 'text-white border-transparent'
+                                : 'border-dark-card text-text-dim hover:border-text-dim'
+                            }`}
+                            style={deliveryFreq === 'monthly' ? { backgroundColor: product.color } : {}}
+                          >
+                            Every Month
+                          </button>
+                        </div>
+
+                        <ul className="space-y-1 text-xs text-text-dim ml-1">
+                          <li>• Lock in your edge with automatic simplicity.</li>
+                          <li>• Members save 15% every order.</li>
+                          <li>• Cancel anytime — no risk, just results.</li>
+                        </ul>
                       </motion.div>
                     )}
+                  </div>
 
+                  {/* One-Time Purchase */}
+                  <div
+                    className="rounded-xl p-4 mb-6 border-2 cursor-pointer transition-all"
+                    style={{ borderColor: !isSubscribe ? product.color : '#2e2e2e', backgroundColor: !isSubscribe ? product.color + '08' : 'transparent' }}
+                    onClick={() => setIsSubscribe(false)}
+                  >
                     <div className="flex items-center gap-3">
-                      {isSubscribe && originalPrice && (
-                        <span className="text-text-dim line-through text-lg">${originalPrice}</span>
-                      )}
-                      <span className="text-4xl font-display font-bold text-honey">${currentPrice}</span>
-                      {isSubscribe && (
-                        <Badge variant="success" size="sm">15% OFF</Badge>
-                      )}
+                      <div
+                        className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                        style={{ borderColor: product.color }}
+                      >
+                        {!isSubscribe && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: product.color }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between flex-1">
+                        <span className="text-text-warm font-medium">One-Time Purchase</span>
+                        <span className="text-lg font-bold text-text-warm">${oneTimePrice}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* CTA */}
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="w-full mb-5 text-lg py-4"
-                    onClick={() => {}}
+                  {/* Subscribe Now Button */}
+                  <motion.button
+                    className="w-full py-4 rounded-full text-white font-bold text-lg tracking-wide transition-all hover:brightness-110 hover:shadow-lg mb-4"
+                    style={{ backgroundColor: product.color }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {isSubscribe ? 'Subscribe Now' : 'Buy Now'}
-                  </Button>
+                    {isSubscribe ? 'SUBSCRIBE NOW' : 'BUY NOW'}
+                  </motion.button>
 
-                  {/* Trust Badges */}
-                  <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-text-dim">
+                  {/* Savings & Trust */}
+                  <div className="text-center mb-6">
+                    <p className="text-text-dim text-xs mb-1">You have made the right choice to save more</p>
+                    <p className="font-bold text-sm" style={{ color: product.color }}>
+                      ${savings} Savings
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-text-dim">
                     <span className="flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5" /> Secure Checkout
                     </span>
@@ -286,29 +339,64 @@ export const ProductShowcase = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Benefits Row */}
+              <div className="mt-14">
+                <div className="flex justify-center gap-8 md:gap-16">
+                  {benefits.map((b, i) => (
+                    <div key={i} className="flex flex-col items-center text-center">
+                      <div
+                        className="w-16 h-16 rounded-full flex items-center justify-center mb-3 border"
+                        style={{ borderColor: product.color + '60', backgroundColor: product.color + '10' }}
+                      >
+                        <b.icon className="w-6 h-6" style={{ color: product.color }} />
+                      </div>
+                      <span className="text-xs font-accent tracking-wider text-text-warm">{b.label}</span>
+                      <span className="text-[10px] text-text-dim">{b.sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Next Product Hint */}
+              {activeIndex < products.length - 1 && (
+                <div className="mt-10 flex justify-center">
+                  <button
+                    onClick={next}
+                    className="flex flex-col items-center gap-1 group"
+                  >
+                    <span className="text-xs font-accent tracking-[0.2em] text-text-dim group-hover:text-text-warm transition-colors">
+                      SEE OUR{' '}
+                      <span className="font-bold" style={{ color: product.color }}>
+                        {products[activeIndex + 1].name.toUpperCase()}
+                      </span>
+                    </span>
+                    <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                      <ChevronRight className="w-4 h-4 text-text-dim rotate-90" />
+                    </motion.div>
+                  </button>
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Product Thumbnails */}
-        <div className="flex justify-center gap-4 mt-10 px-4">
-          {products.map((p, index) => (
-            <motion.button
-              key={p.id}
-              onClick={() => handleProductChange(index)}
-              className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                activeProduct === index
-                  ? 'border-honey shadow-honey'
-                  : 'border-transparent opacity-50 hover:opacity-80'
-              }`}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {p.image && (
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-              )}
-            </motion.button>
-          ))}
+        {/* Mobile Navigation */}
+        <div className="flex lg:hidden justify-center gap-4 mt-10">
+          <button
+            onClick={prev}
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white border"
+            style={{ borderColor: product.color + '50', backgroundColor: product.color + '15' }}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={next}
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white border"
+            style={{ borderColor: product.color + '50', backgroundColor: product.color + '15' }}
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </section>
