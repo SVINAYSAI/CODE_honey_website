@@ -24,14 +24,27 @@ export const Hero = () => {
   return (
     <section id="home" className="relative min-h-screen flex flex-col overflow-hidden pt-10">
       {/* Background */}
-      <div className="absolute inset-0 bg-deep">
+      <div className="absolute inset-0 bg-deep overflow-hidden">
+        {/* Background Video */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover opacity-50"
+          src="/0d8e1d6442cb4e51bbb3c76f5de13e84.HD-1080p-7.2Mbps-65738013.mp4"
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-deep/60 via-deep/40 to-deep/90" />
+
         <HoneycombBg opacity={0.03} />
         
         {/* Radial Glow */}
         <div 
           className="absolute top-1/2 right-0 w-[600px] h-[600px] rounded-full opacity-30"
           style={{
-            background: 'radial-gradient(circle, rgba(232,160,32,0.4) 0%, transparent 40%)',
+            background: 'radial-gradient(circle, rgba(232,192,106,0.4) 0%, transparent 40%)',
             transform: 'translate(30%, -50%)',
           }}
         />
@@ -40,7 +53,7 @@ export const Hero = () => {
         <div 
           className="absolute inset-0 opacity-20"
           style={{
-            background: 'linear-gradient(135deg, rgba(232,160,32,0.3) 0%, transparent 50%)',
+            background: 'linear-gradient(135deg, rgba(232,192,106,0.3) 0%, transparent 50%)',
           }}
         />
       </div>
@@ -136,8 +149,8 @@ export const Hero = () => {
                 <motion.div
                   className="relative w-72 h-96 md:w-80 md:h-[28rem] rounded-2xl overflow-hidden"
                   style={{
-                    background: 'linear-gradient(145deg, #1A1C17 0%, #2B4020 50%, #1A1C17 100%)',
-                    boxShadow: '0 0 60px rgba(232, 160, 32, 0.3), inset 0 0 40px rgba(232, 160, 32, 0.1)',
+                    background: 'linear-gradient(145deg, #1A1C17 0%, #3D6B47 50%, #1A1C17 100%)',
+                    boxShadow: '0 0 60px rgba(232, 192, 106, 0.3), inset 0 0 40px rgba(232, 192, 106, 0.1)',
                   }}
                   animate={{ y: [0, -15, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
